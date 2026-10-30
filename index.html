@@ -508,7 +508,7 @@ function docHtml(kind, a) {
   const p = S.projects.find(x => x.id === a.pid);
   const form = kind === 'form', body = form ? formHtml(a) : photoHtml(a);
   return `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${form ? '稽核表' : '照片黏貼表'}_${esc(p.name)}_${esc(a.date)}</title><style>${PCSS}${form ? FCSS : KCSS}</style></head><body>
-  <div class="tb"><button onclick="window.print()">列印／存成 PDF</button><span>${form ? '紙張選 A3 直式' : '紙張選 A4 直式'}，縮放 100%，邊界「預設」，打開「背景圖形」</span></div>${body}</body></html>`;
+  <div class="tb"><button onclick="window.print()">列印／存成 PDF</button>${form ? '<label>紙張 <select id="pp" style="font-size:15px;padding:6px"><option value="A3">A3（正式）</option><option value="A4">A4（手機/縮小）</option></select></label>' : ''}<span>${form ? '電腦：選 A3 直式；手機：選 A4（會自動縮小）。' : '紙張選 A4 直式，'}縮放 100%，邊界「預設」，打開「背景圖形」</span></div>${body}${form ? `<style id="pst"></style><script>(function(){var s=document.getElementById('pp'),t=document.getElementById('pst');function f(){if(s.value==='A4'){t.textContent='@page{size:A4 portrait;margin:6mm}.in{zoom:.64!important}.sheet{padding:0 !important}'}else t.textContent=''}s.onchange=f;if(/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)||screen.width<900){s.value='A4'}f()})()<\/script>` : ''}</body></html>`;
 }
 const clean = t => String(t || '').replace(/[\\/:*?"<>|\r\n]/g, '_').trim().slice(0, 40);
 const b64 = d => { const b = atob(d.split(',')[1]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
