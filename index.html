@@ -396,7 +396,7 @@ const PCSS = `
 .tb button{background:#f5b301;border:0;border-radius:4px;padding:8px 18px;font-weight:700;font-size:15px;cursor:pointer}
 .sheet{background:#fff;margin:12px auto;padding:0;page-break-after:always;break-after:page;overflow:hidden}
 .sheet:last-child{page-break-after:auto;break-after:auto}
-table{border-collapse:collapse;width:100%}td,th{border:.3mm solid #000;padding:.6mm 1mm;vertical-align:top;line-height:1.35}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6mm 1mm;vertical-align:top;line-height:1.35}
 .c{text-align:center}.vm{vertical-align:middle}
 @media print{body{background:#fff}.tb{display:none}.sheet{margin:0;box-shadow:none}}`;
 const FCSS = `@page{size:A3 portrait;margin:6mm}
@@ -406,7 +406,7 @@ h1{font-size:20pt;margin:0 0 1.5mm;text-align:center;letter-spacing:.15em;font-w
 .hd1{display:flex;justify-content:space-between;align-items:flex-end;font-size:9.5pt;margin-bottom:1mm;line-height:1.5}
 .hd1 .r{min-width:92mm}
 table{border-collapse:collapse;table-layout:fixed;width:285mm}
-td{border:.25mm solid #000;padding:.25mm .8mm;vertical-align:middle;line-height:1.3;word-break:break-all}
+td{border:1px solid #000;padding:.25mm .8mm;vertical-align:middle;line-height:1.3;word-break:break-all}
 .hdt td{font-size:9pt;height:6.4mm;padding:.5mm 1.2mm}.hdt .b{text-align:center;font-weight:700}
 .th td{text-align:center;font-weight:700;font-size:8.2pt}.th .big{font-size:11pt;letter-spacing:.08em}
 .cat td{font-weight:700}.c{text-align:center}
@@ -420,7 +420,7 @@ const KCSS = `@page{size:A4 portrait;margin:0}
 .sheet p{margin:0 9.75mm;line-height:22pt}.r{color:#f00}
 .t1{text-align:center;font-size:16pt}.t2{text-align:right;font-size:14pt}.t3{font-size:14pt}.t3 i{font-style:normal;display:inline-block;width:2em}
 .blk{width:166mm;margin:0 0 3mm 0;table-layout:fixed;border-collapse:collapse}
-.blk td{border:.25pt solid #000;padding:1mm;vertical-align:middle;font-size:12pt;line-height:1.4;word-break:break-all}
+.blk td{border:1px solid #000;padding:1mm;vertical-align:middle;font-size:12pt;line-height:1.4;word-break:break-all}
 .blk tr.h td{height:7.5mm}.blk tr.n td{height:9mm}.blk .ph{text-align:center;font-size:14pt;padding:1mm}
 .pgrid{display:grid;gap:1.5mm;width:100%}.pgrid.one{grid-template-columns:1fr}.pgrid.two,.pgrid.three{grid-template-columns:1fr 1fr}
 .pgrid.three{grid-template-rows:1fr 1fr}.pi{position:relative;min-height:0}.pgrid img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}`;
@@ -504,11 +504,26 @@ function photoHtml(a) {
   }
   return out;
 }
-function docHtml(kind, a) {
+const isMobile = () => /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const scU = (t, k) => t.replace(/data:[^"')]+|(-?\d*\.?\d+)(mm|pt)\b/g, (m, n, u) => n === undefined ? m : (+n * k).toFixed(3) + u);
+function docHtml(kind, a, mobile) {
   const p = S.projects.find(x => x.id === a.pid);
-  const form = kind === 'form', body = form ? formHtml(a) : photoHtml(a);
-  return `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8"><meta name="viewport" content="width=794"><title>${form ? '稽核表' : '照片黏貼表'}_${esc(p.name)}_${esc(a.date)}</title><style>${PCSS}${form ? FCSS : KCSS}</style></head><body>
-  <div class="tb"><button onclick="window.print()">列印／存成 PDF</button>${form ? '<label>紙張 <select id="pp" style="font-size:15px;padding:6px"><option value="A3">A3（正式）</option><option value="A4">A4（手機/縮小）</option></select></label>' : '<label>模式 <select id="pp" style="font-size:15px;padding:6px"><option value="N">電腦（A4 原尺寸）</option><option value="M">手機（縮小，避免多出空白頁）</option></select></label>'}<span>${form ? '電腦：選 A3 直式；手機：選 A4（會自動縮小）。' : '紙張選 A4 直式，'}縮放 100%，邊界「預設」，打開「背景圖形」</span></div>${body}<style id="pst"></style><script>(function(){var f0=${form ? 'true' : 'false'},s=document.getElementById('pp'),t=document.getElementById('pst'),m=/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)||screen.width<900;function f(){if(f0){t.textContent=s.value==='A4'?'@page{size:A4 portrait;margin:6mm}.in{zoom:.64!important}.sheet{padding:0 !important}':''}else{t.textContent=s.value==='M'?'@page{margin:0}.sheet{zoom:.86;margin:0 auto!important;break-inside:avoid}':''}}s.onchange=f;if(m)s.value=f0?'A4':'M';f()})()<\/script></body></html>`;
+  const form = kind === 'form';
+  let body = form ? formHtml(a) : photoHtml(a), css = form ? FCSS : KCSS;
+  const title = `${form ? '稽核表' : '照片黏貼表'}_${esc(p.name)}_${esc(a.date)}`;
+  let tip = form ? '紙張選 A3 直式' : '紙張選 A4 直式', vp = '', extra = '';
+  if (mobile) {
+    // 手機：不用 CSS zoom（iOS 會錯亂），直接把所有 mm/pt 尺寸等比縮小，整張排進 A4
+    const k = form ? .64 : .86;
+    css = scU(css, k).replace(/zoom:[\d.]+;?/g, '');
+    body = scU(body, k).replace(/zoom:[\d.]+;?/g, '');
+    if (form) extra = '@page{size:A4 portrait;margin:6mm}.sheet{padding:0 13mm!important}';
+    else extra = '@page{margin:0}.sheet{margin:0 auto!important}';
+    tip = '手機：已自動縮成 A4 一張；紙張 A4 直式，縮放 100%';
+    vp = '<meta name="viewport" content="width=794">';
+  } else vp = '<meta name="viewport" content="width=device-width,initial-scale=1">';
+  return `<!doctype html><html lang="zh-Hant"><head><meta charset="utf-8">${vp}<title>${title}</title><style>${PCSS}${css}${extra}</style></head><body>
+  <div class="tb"><button onclick="window.print()">列印／存成 PDF</button><span>${tip}，邊界「預設」，打開「背景圖形」</span></div>${body}</body></html>`;
 }
 const clean = t => String(t || '').replace(/[\\/:*?"<>|\r\n]/g, '_').trim().slice(0, 40);
 const b64 = d => { const b = atob(d.split(',')[1]), u = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) u[i] = b.charCodeAt(i); return u; };
@@ -566,7 +581,7 @@ async function saveFile(name, blob) {
 }
 async function doPrint(kind, a) {
   const p = S.projects.find(x => x.id === a.pid);
-  const html = docHtml(kind, a), blob = new Blob([html], {type:'text/html'});
+  const html = docHtml(kind, a, isMobile()), blob = new Blob([html], {type:'text/html'});
   const name = `${kind === 'form' ? 'A3稽核表' : '照片黏貼表'}_${(p.name || '工程').slice(0, 20)}_第${compute(a).n}次_${a.date}.html`;
   if (DL) { if (await saveFile(name, blob)) toast('已存成檔案：開啟後按「列印／存成 PDF」'); return; }
   const u = URL.createObjectURL(blob), w = window.open(u, '_blank');
