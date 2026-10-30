@@ -455,7 +455,7 @@ function formHtml(a) {
     let h = sec === 'H'
       ? `<table>${COLS}<thead><tr class="th"><td rowspan="2">類<br>別</td><td rowspan="2" colspan="2">項<br>次</td><td rowspan="2" class="big">${label}</td><td rowspan="2">缺失地點</td><td>稽核</td><td>上次通知</td><td colspan="2">扣款金額(元)</td><td rowspan="2" class="big">說　明</td></tr>
     <tr class="th"><td>結果</td><td>改善日期</td><td>本次金額</td><td>累計金額</td></tr></thead>`
-      : `<table>${COLS}<thead><tr class="th"><td colspan="10" class="big" style="text-align:center;height:7mm">${label}</td></tr></thead>`;
+      : `<tr class="th"><td colspan="10" class="big" style="text-align:center;height:7mm">${label}</td></tr>`;
     rows.forEach((r, k) => {
       const L = left[k] ? `<td rowspan="${left[k].span}" class="${left[k].vt ? 'vt' : 'c'}" style="${left[k].vt ? '' : 'font-weight:700;font-size:10pt'}">${esc(left[k].label)}</td>` : '';
       const Nn = note[k] ? `<td rowspan="${note[k].span}" class="nt">${esc(note[k].txt[0])}${esc(note[k].txt[1])}</td>` : '';
@@ -464,7 +464,7 @@ function formHtml(a) {
       const pv = (s.res === 'x' || s.res === 't') && rr.prevDate ? rocStr(rr.prevDate).replace('年', '/').replace('月', '/').replace('日', '') : '';
       h += `<tr>${L}<td class="c">${it.tag}</td><td class="c">${esc(it.no)}</td><td>${ckText(it, s)}</td><td class="sm">${esc(s.place)}</td><td class="res">${SYM[s.res] || ''}</td><td class="c sm">${esc(pv)}</td><td class="num">${s.res === 'x' ? amt(rr.cur) : ''}</td><td class="num">${rr.cum ? amt(rr.cum) : ''}</td>${Nn}</tr>`;
     });
-    return h + '</table>';
+    return h;
   };
   const nb = 'style="border:0"';
   const ft = `<table class="foot"><colgroup><col style="width:34mm"><col style="width:45mm"><col style="width:27mm"><col style="width:80.2mm"><col style="width:26.4mm"><col style="width:72.4mm"></colgroup>
@@ -477,7 +477,7 @@ function formHtml(a) {
   <tr><td class="b">工程名稱：</td><td><b>${esc(p.name)}</b></td><td class="b">監造單位</td><td>${esc(p.sup)}</td></tr>
   <tr><td class="b">工程編號：</td><td style="white-space:nowrap;font-size:8.6pt">${esc(p.no)}　　工程契約金額：${p.contract ? fmt(p.contract) : ''} 元　　開工日期：${esc(rocStr(p.start))}　　預定竣工日期：${esc(rocStr(p.end))}</td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
   const sg = `<table class="sign" style="width:285mm"><tr><td style="width:95mm">會同或被知會人員　${esc(a.attendee)}</td><td style="width:90mm">稽核人員　${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
-  return `<div class="sheet"><div class="in" style="zoom:${Math.max(.8, .955 - .004 * (a.xs || []).length)}">${hd}${mk('H', '高風險稽核項目<br><span style="font-size:9pt;letter-spacing:0">(比照勞動檢查法第28條或有立即發生危險之虞情事，應立即改善)</span>')}${mk('G', '一般風險稽核項目')}${ft}${sg}</div></div>`;
+  return `<div class="sheet"><div class="in" style="zoom:${Math.max(.8, .955 - .004 * (a.xs || []).length)}">${hd}${mk('H', '高風險稽核項目<br><span style="font-size:9pt;letter-spacing:0">(比照勞動檢查法第28條或有立即發生危險之虞情事，應立即改善)</span>')}${mk('G', '一般風險稽核項目')}</table>${ft}${sg}</div></div>`;
 }
 function photoHtml(a) {
   const p = S.projects.find(x => x.id === a.pid);
@@ -518,7 +518,7 @@ function docHtml(kind, a, mobile) {
     css = scU(css, k).replace(/zoom:[\d.]+;?/g, '');
     body = scU(body, k).replace(/zoom:[\d.]+;?/g, '');
     if (form) extra = '@page{size:A4 portrait;margin:6mm}.sheet{padding:0 13mm!important}';
-    else extra = '@page{margin:0}.sheet{margin:0 auto!important}';
+    else extra = '@page{margin:0}.sheet{margin:0 auto!important;height:auto!important;overflow:visible!important;page-break-after:auto!important;break-after:auto!important}.sheet+.sheet{page-break-before:always;break-before:page}';
     tip = '手機：已自動縮成 A4 一張；紙張 A4 直式，縮放 100%';
     vp = '<meta name="viewport" content="width=794">';
   } else vp = '<meta name="viewport" content="width=device-width,initial-scale=1">';
