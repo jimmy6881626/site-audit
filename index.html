@@ -160,6 +160,7 @@ function defAmt(item, p) {
   const k = item.key;
   if (k === 'G6.02' || k === 'G6.13' || k === 'G6.14') return 6000;
   if (k === 'G6.15') return p && p.road === 'fast' ? 20000 : 6000;
+  if (k === 'G9.01') return 3000; // 01574章 3.26.2.1 未戴安全帽/反光背心：每人 3,000，不分契約金額
   return (p && Number(p.contract) >= 10000000) ? 5000 : 3000;
 }
 const amtOf = (s, item, p) => (s.amt !== null && s.amt !== '' && s.amt !== undefined) ? Number(s.amt) : defAmt(item, p);
@@ -385,7 +386,7 @@ function viewSettings() {
     <label class="f">前期累計稽核次數<input type="number" inputmode="numeric" id="pf-baseCount" data-pf="baseCount" value="${p.baseCount || 0}"></label>
     <label class="f">前期累計缺失數<input type="number" inputmode="numeric" id="pf-baseDefects" data-pf="baseDefects" value="${p.baseDefects || 0}"></label>
     <label class="f">前期累計扣款（元）<input type="number" inputmode="numeric" id="pf-baseTotal" data-pf="baseTotal" value="${p.baseTotal || 0}"></label></div></div>
-    <div class="card"><h2>扣款預設值</h2><p class="muted">打 × 時自動帶入：一般項目依契約金額（未滿 1,000 萬 3,000 元，1,000 萬以上 5,000 元，目前每項 ${fmt(tier)} 元）；6.02、6.13、6.14 為 6,000 元；6.15 依道路類型。每一項的金額都可以在項目內手動改。</p></div>
+    <div class="card"><h2>扣款預設值</h2><p class="muted">打 × 時自動帶入：一般項目依契約金額（未滿 1,000 萬 3,000 元，1,000 萬以上 5,000 元，目前每項 ${fmt(tier)} 元）；6.02、6.13、6.14 為 6,000 元；6.15 依道路類型（依 01556 章）；9.01 未戴安全帽／反光背心固定 3,000 元，第二次起按實際未佩戴人數累計，請自行把金額改成「3,000 × 人數」（依 01574 章 3.26.2.1）。每一項的金額都可以在項目內手動改。</p></div>
     <div class="card"><h3>刪除工程</h3><p class="muted">會一併刪除這個工程所有稽核紀錄與照片。</p><button class="btn danger" data-act="delProj" style="width:max-content">刪除這個工程</button></div>`;
 }
 
