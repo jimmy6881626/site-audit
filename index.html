@@ -335,10 +335,12 @@ function clauses(it, s) {
   return out;
 }
 function autoNote(it, s) {
-  const parts = it.text.split('□').slice(1);
-  const pick = s.ck.filter(i => parts[i] !== undefined).map(i => parts[i].replace(/[。；;，,、\s]+$/,'').replace(/^[、，,\s]+/,''));
+  const txt = String((it && it.text) || (s && s.text) || '');
+  if (!txt.includes('□')) return txt;
+  const parts = txt.split('□').slice(1);
+  const pick = (s && s.ck ? s.ck : []).filter(i => parts[i] !== undefined).map(i => parts[i].replace(/[。；;，,、\s]+$/,'').replace(/^[、，,\s]+/,''));
   if (pick.length) return pick.join('、');
-  const t = it.text.replace(/□/g, '').replace(/\s+/g, '');
+  const t = txt.replace(/□/g, '').replace(/\s+/g, '');
   return t.length > 60 ? t.slice(0, 60) + '…' : t;
 }
 
@@ -523,9 +525,11 @@ const KCSS = `@page{size:A4 portrait;margin:0}
 const NOTES_P1 = i => i < 7;
 
 function ckText(it, s) {
-  const parts = it.text.split('□');
+  const txt = String((it && it.text) || (s && (s.text || s.note)) || '');
+  if (!txt.includes('□')) return esc(txt).replace(/\n/g, '<br>');
+  const parts = txt.split('□');
   let out = esc(parts[0]);
-  for (let i = 1; i < parts.length; i++) out += s.ck.includes(i - 1) ? `<span class="on">☑${esc(parts[i])}</span>` : `☐${esc(parts[i])}`;
+  for (let i = 1; i < parts.length; i++) out += (s && s.ck && s.ck.includes(i - 1)) ? `<span class="on">☑${esc(parts[i])}</span>` : `☐${esc(parts[i])}`;
   return out.replace(/\n/g, '<br>');
 }
 function formHtml(a) {
