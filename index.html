@@ -502,27 +502,29 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.4
 .c{text-align:center}.vm{vertical-align:middle}
 @media print{body{background:#fff}.tb{display:none}.sheet{margin:0;box-shadow:none}}`;
 
-const FCSS = `@page{size:A3 portrait;margin:6mm 8mm}
-.sheet{width:283mm;margin:0 auto;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;overflow:visible;box-sizing:border-box}
+const FCSS = `@page{size:A3 portrait;margin:6mm 10mm}
+.sheet{width:277mm;margin:0 auto;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;overflow:visible;box-sizing:border-box}
 .sheet:first-child{page-break-after:always;break-after:page}
-h1{font-size:18pt;margin:0 0 1mm;text-align:center;letter-spacing:.15em;font-weight:700}
-.hd1{display:flex;justify-content:space-between;align-items:flex-end;font-size:8.8pt;margin-bottom:.8mm;line-height:1.3}
+.title-table{width:277mm;margin:0 auto 1mm auto;border-collapse:collapse;border:0}
+.title-table td{border:0;padding:0;vertical-align:bottom}
+h1{font-size:18pt;margin:0;text-align:center;letter-spacing:.15em;font-weight:700;line-height:1.2}
+.hd1{display:flex;justify-content:space-between;align-items:flex-end;font-size:8.8pt;margin:0 auto .8mm auto;width:277mm;line-height:1.3}
 .hd1 .r{min-width:90mm;text-align:right}
-table{border-collapse:collapse;table-layout:fixed;width:283mm}
+table{border-collapse:collapse;table-layout:fixed;width:277mm;border-right:1px solid #000;border-bottom:1px solid #000}
 td{border:1px solid #000;word-break:break-all}
 .hdt td{font-size:8.4pt;height:5.5mm;padding:.3mm .8mm;vertical-align:middle}.hdt .b{text-align:center;font-weight:700}
 .th td{text-align:center;font-weight:700;font-size:7.8pt;vertical-align:middle}.th .big{font-size:10pt;letter-spacing:.06em}
 .cat td{font-weight:700;background:#fff;vertical-align:middle}.c{text-align:center}
 .vt{writing-mode:vertical-rl;text-orientation:upright;text-align:center;font-weight:700;letter-spacing:.15em;font-size:8.2pt}
 .res{font-size:11pt;font-weight:700;text-align:center}.num{text-align:right;white-space:nowrap}
-.nt{vertical-align:top;line-height:1.28;word-break:normal;text-align:justify}.on{font-weight:700}
-.foot td{height:5.2mm;font-weight:700;font-size:8.4pt;vertical-align:middle}.sign{margin-top:1.5mm}.sign td{height:17mm;vertical-align:top;font-weight:700;font-size:8.8pt;border:0}
-/* 第一頁高度優化：適度加大 padding 與字體，讓 41 列優雅佈滿整張 A3 */
-.p1-table td{padding:1.4mm .8mm;font-size:7.8pt;line-height:1.38;vertical-align:middle}
-.p1-table .sm{font-size:7.2pt}
-.p1-table .nt{font-size:7.2pt;padding:1.5mm 1.8mm}
-/* 第二頁高度優化：緊湊比例，確保 86 列＋結算＋簽章剛好完整收納於單張 A3 */
-.p2-table td{padding:.22mm .6mm;font-size:6.9pt;line-height:1.2;vertical-align:middle}
+.nt{vertical-align:top;line-height:1.28;word-break:normal;text-align:justify;border-right:1px solid #000!important}.on{font-weight:700}
+.foot td{height:5.2mm;font-weight:700;font-size:8.4pt;vertical-align:middle}.sign{margin-top:1.5mm;border:0}.sign td{height:17mm;vertical-align:top;font-weight:700;font-size:8.8pt;border:0}
+/* 第一頁高度：適中比例，41列緊密完整佈滿單頁A3，絕不溢出到第二頁 */
+.p1-table td{padding:.6mm .8mm;font-size:7.4pt;line-height:1.26;vertical-align:middle}
+.p1-table .sm{font-size:6.8pt}
+.p1-table .nt{font-size:7pt;padding:1.5mm 1.6mm}
+/* 第二頁高度：緊密高密度排版，86列＋結算＋簽章剛好完整收納於單張A3 */
+.p2-table td{padding:.22mm .6mm;font-size:6.9pt;line-height:1.18;vertical-align:middle}
 .p2-table .sm{font-size:6.4pt}
 .p2-table .nt{font-size:6.6pt;padding:1.2mm 1.5mm};`;
 
@@ -551,7 +553,7 @@ function ckText(it, s) {
 function formHtml(a) {
   const p = S.projects.find(x => x.id === a.pid) || {}, c = compute(a), d = roc(a.date), t = String(a.time || ':').split(':');
   const amt = n => n ? fmt(n) : '';
-  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7mm"><col style="width:10mm"><col style="width:144.5mm"><col style="width:19.5mm"><col style="width:8.5mm"><col style="width:17mm"><col style="width:15.5mm"><col style="width:14mm"><col style="width:42.5mm"></colgroup>';
+  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7mm"><col style="width:10mm"><col style="width:140mm"><col style="width:19mm"><col style="width:8.5mm"><col style="width:16.5mm"><col style="width:15mm"><col style="width:14mm"><col style="width:42.5mm"></colgroup>';
 
   // --- 第 1 頁（高風險區塊，對應 Excel 第 1 頁） ---
   const rows1 = [];
@@ -567,8 +569,8 @@ function formHtml(a) {
   });
 
   // 說明欄 一～七點，以 flex 分散均勻排列覆蓋整頁高度（留白均勻、無任何格線）
-  const notes1Html = `<div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;min-height:280mm;box-sizing:border-box">` +
-    DATA.notes.slice(0, 7).map(n => `<div style="line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
+  const notes1Html = `<div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;min-height:220mm;box-sizing:border-box">` +
+    DATA.notes.slice(0, 7).map(n => `<div style="line-height:1.32;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
     `</div>`;
 
   let tbody1 = '<tbody>';
@@ -636,11 +638,11 @@ function formHtml(a) {
     <tr class="th"><td rowspan="2">類<br>別</td><td rowspan="2" colspan="2">項<br>次</td><td rowspan="2" class="big">一 般 風 險 稽 核 項 目</td><td rowspan="2">缺失地點</td><td>稽核</td><td>上次通知</td><td colspan="2">扣款金額(元)</td><td rowspan="2" class="big">說 明</td></tr>
     <tr class="th"><td>結果</td><td>改善日期</td><td>本次金額</td><td>累計金額</td></tr></thead>`;
 
-  const ft = `<table class="foot"><colgroup><col style="width:34mm"><col style="width:45mm"><col style="width:27mm"><col style="width:80.2mm"><col style="width:26.4mm"><col style="width:70.4mm"></colgroup>
+  const ft = `<table class="foot"><colgroup><col style="width:34mm"><col style="width:45mm"><col style="width:26mm"><col style="width:78mm"><col style="width:26mm"><col style="width:68mm"></colgroup>
     <tr><td colspan="4"></td><td class="c">本次扣款金額</td><td class="num">${fmt(c.total)}</td></tr>
     <tr><td class="c">本次稽核缺失數</td><td class="c">${c.defects}</td><td class="c">連前累計缺失數</td><td class="c">${c.cumDefects}</td><td class="c">累計扣款金額</td><td class="num">${fmt(c.cumTotal)}</td></tr></table>`;
 
-  const sg = `<table class="sign" style="width:283mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
+  const sg = `<table class="sign" style="width:277mm"><tr><td style="width:92mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:55mm">單位主管<br><span style="font-weight:400;font-size:7.5pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
 
   const infoRowTable = `<table style="width:100%;border-collapse:collapse;border:0;table-layout:fixed"><tr>
     <td style="border:0;padding:0;text-align:left;width:20%;font-size:8.4pt">${esc(p.no)}</td>
@@ -649,22 +651,23 @@ function formHtml(a) {
     <td style="border:0;padding:0;text-align:right;width:25%;font-size:8.4pt">預定竣工日期：${esc(rocStr(p.end))}</td>
   </tr></table>`;
 
-  // 頁數在最右上角頂點
-  const hd = (pageNo) => `<div style="position:relative;width:283mm;margin:0 auto">
-    <div style="position:absolute;top:0;right:0;font-size:9.2pt;font-weight:700;line-height:1">第 ${pageNo} 頁，共 2 頁</div>
-    <h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
-  </div>
-  <div class="hd1" style="width:283mm;margin:0 auto .8mm auto">
+  // 頁數以固定三欄表格鎖定在「最右上角」，絕對不跑位
+  const hd = (pageNo) => `<table class="title-table"><tr>
+    <td style="width:25%"></td>
+    <td style="width:50%"><h1>交通部公路局交通、安衛、環保稽（複）核表</h1></td>
+    <td style="width:25%;text-align:right;font-size:9.2pt;font-weight:700">第 ${pageNo} 頁，共 2 頁</td>
+  </tr></table>
+  <div class="hd1">
     <div><b>填報單位：${esc(p.unit)}</b></div>
     <div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次</div>
   </div>
-  <table class="hdt" style="width:283mm;margin:0 auto"><colgroup><col style="width:21mm"><col style="width:189mm"><col style="width:28mm"><col style="width:45mm"></colgroup>
+  <table class="hdt"><colgroup><col style="width:21mm"><col style="width:185mm"><col style="width:28mm"><col style="width:43mm"></colgroup>
   <tr><td class="b">工程名稱：</td><td><b>${esc(p.name)}</b></td><td class="b">監造單位</td><td>${esc(p.sup)}</td></tr>
   <tr><td class="b">工程編號：</td><td style="padding:0 2mm">${infoRowTable}</td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
 
-  // 兩頁寬度固定為 283mm 完全對齊，第 1 頁與第 2 頁各自採用專屬行高排版，均勻佈滿單頁 A3
-  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page"><div class="in" style="width:283mm;margin:0 auto">${hd(1)}<table class="p1-table">${COLS}${thead1}${tbody1}</table></div></div>`;
-  const page2 = `<div class="sheet"><div class="in" style="width:283mm;margin:0 auto">${hd(2)}<table class="p2-table">${COLS}${thead2}${tbody2}</table>${ft}${sg}</div></div>`;
+  // 兩頁寬度 277mm 100% 相同，絕不溢出邊緣或被印表機裁切
+  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page"><div class="in" style="width:277mm;margin:0 auto">${hd(1)}<table class="p1-table">${COLS}${thead1}${tbody1}</table></div></div>`;
+  const page2 = `<div class="sheet"><div class="in" style="width:277mm;zoom:0.95;margin:0 auto">${hd(2)}<table class="p2-table">${COLS}${thead2}${tbody2}</table>${ft}${sg}</div></div>`;
 
   return page1 + page2;
 }
