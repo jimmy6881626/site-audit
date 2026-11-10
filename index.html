@@ -146,7 +146,9 @@ const timers = {};
 const saveLater = (st, o) => { clearTimeout(timers[o.id]); timers[o.id] = setTimeout(() => idbPut(st, o), 300); };
 
 /* ---------- cloud sync (Google Apps Script) ---------- */
-const getGasUrl = () => lsGet('gas_url') || '';
+// 預設鎖定官方 Google Drive 端點，避免同仁誤改
+const OFFICIAL_GAS_URL = "https://script.google.com/macros/s/AKfycbwL63P9eEz1t6BEsnuJxdLQ_c53AIQw_Bgl2ri5Xnknp9D78qF9fqWRgqVKGr6gopAb1g/exec";
+const getGasUrl = () => lsGet('gas_url') || OFFICIAL_GAS_URL;
 const setGasUrl = url => lsSet('gas_url', (url || '').trim());
 
 async function syncWithCloud(silent = false) {
@@ -454,7 +456,10 @@ function viewSettings() {
     <label class="f">前期累計扣款（元）<input type="number" inputmode="numeric" id="pf-baseTotal" data-pf="baseTotal" value="${p.baseTotal || 0}"></label></div></div>
     <div class="card"><h2>扣款預設值</h2><p class="muted">打 × 時自動帶入：一般項目依契約金額（未滿 1,000 萬 3,000 元，1,000 萬以上 5,000 元，目前每項 ${fmt(tier)} 元）；6.02、6.13、6.14 為 6,000 元；6.15 依道路類型（依 01556 章）；9.01 未戴安全帽／反光背心固定 3,000 元，第二次起按實際未佩戴人數累計，請自行把金額改成「3,000 × 人數」（依 01574 章 3.26.2.1）。每一項的金額都可以在項目內手動改。</p></div>
     <div class="card"><h2>Google 雲端共用同步</h2><p class="muted">設定 Google Apps Script Web App 網址後，各同仁手機與電腦將自動共用工程與稽核資料，照片亦會自動依工程名稱儲存至 Google Drive。</p>
-    <label class="f">雲端同步網址 (Web App URL)<input type="text" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" value="${esc(getGasUrl())}"></label>
+    <label class="f">雲端同步網址 (Web App URL)<input type="text" id="gas-url-input" value="${esc(getGasUrl())}" readonly style="background:#e8edec;color:#5b686d;cursor:not-allowed">
+<div class="pbtns" style="margin-top:6px">
+  <button class="btn sm primary" data-act="syncNow">立即同步最新資料</button>
+</div></label>
     <div class="pbtns" style="margin-top:6px"><button class="btn sm primary" data-act="saveGasUrl">儲存並立即同步</button><button class="btn sm" data-act="syncNow">立即同步最新資料</button></div></div>
     <div class="card"><h3>刪除工程</h3><p class="muted">會一併刪除這個工程所有稽核紀錄與照片。</p><button class="btn danger" data-act="delProj" style="width:max-content">刪除這個工程</button></div>`;
 }
