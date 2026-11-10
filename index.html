@@ -408,7 +408,6 @@ function renderList() {
     if (S.filter === 'F') items = items.filter(it => { const s = a.items[it.key]; return s && (s.res || s.photos.length || s.ck.length); });
     if (!items.length) continue;
     const filled = g.items.filter(it => (a.items[it.key] || {}).res).length;
-    // 預設全展開，點擊才收合
     const open = q || S.filter === 'F' ? true : (S.collapsed[g.gid] !== true);
     const title = (g.sec === 'G' && !isEnv(g) ? '一般 · ' : g.sec === 'H' ? '高風險 · ' : '') + (g.catno ? g.catno + ' ' : '') + g.short;
     html.push(`<div class="grp"><button class="gh" data-act="grp" data-g="${g.gid}" aria-expanded="${open}"><span class="cv">▸</span><span>${esc(title)}</span><span class="pg">${filled}/${g.items.length}</span></button>`);
@@ -491,31 +490,32 @@ function viewSettings() {
     <div class="card"><h3>刪除工程</h3><p class="muted">會一併刪除這個工程所有稽核紀錄與照片。</p><button class="btn danger" data-act="delProj" style="width:max-content">刪除這個工程</button></div>`;
 }
 
-/* ---------- printing ---------- */
+/* ---------- printing (嚴格比照 Excel 13020A 版面) ---------- */
 const PCSS = `
 *{box-sizing:border-box}body{margin:0;background:#9aa;font-family:"Noto Sans TC","Microsoft JhengHei","PingFang TC","Heiti TC",sans-serif;color:#000}
-.tb{position:sticky;top:0;background:#222;color:#fff;padding:10px 16px;display:flex;gap:14px;align-items:center;font-size:14px;z-index:5}
-.tb button{background:#f5b301;border:0;border-radius:4px;padding:8px 18px;font-weight:700;font-size:15px;cursor:pointer}
-.sheet{background:#fff;margin:12px auto;padding:0;page-break-after:always;break-after:page;overflow:hidden}
-.sheet:last-child{page-break-after:auto;break-after:auto}
-table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.6mm 1mm;vertical-align:top;line-height:1.35}
+.tb{position:sticky;top:0;background:#222;color:#fff;padding:8px 16px;display:flex;gap:14px;align-items:center;font-size:14px;z-index:5}
+.tb button{background:#f5b301;border:0;border-radius:4px;padding:6px 16px;font-weight:700;font-size:14px;cursor:pointer}
+.sheet{background:#fff;margin:10px auto;padding:0;box-shadow:0 0 10px rgba(0,0,0,.15)}
+.sheet:first-child{page-break-after:always;break-after:page}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.4mm .8mm;vertical-align:middle;line-height:1.25}
 .c{text-align:center}.vm{vertical-align:middle}
 @media print{body{background:#fff}.tb{display:none}.sheet{margin:0;box-shadow:none}}`;
-const FCSS = `@page{size:A3 portrait;margin:6mm}
-.in{width:285mm;zoom:.94;margin:0 auto}
-.sheet{width:auto;padding:0 6mm;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;font-size:7.2pt;overflow:visible}
-h1{font-size:19pt;margin:0 0 1.2mm;text-align:center;letter-spacing:.15em;font-weight:700}
-.hd1{display:flex;justify-content:space-between;align-items:flex-end;font-size:9pt;margin-bottom:1mm;line-height:1.4}
-.hd1 .r{min-width:92mm}
-table{border-collapse:collapse;table-layout:fixed;width:285mm}
-td{border:1px solid #000;padding:.2mm .7mm;vertical-align:middle;line-height:1.25;word-break:break-all}
-.hdt td{font-size:8.8pt;height:6mm;padding:.4mm 1mm}.hdt .b{text-align:center;font-weight:700}
-.th td{text-align:center;font-weight:700;font-size:8pt}.th .big{font-size:10.5pt;letter-spacing:.08em}
-.cat td{font-weight:700;background:#fafafa}.c{text-align:center}
-.vt{writing-mode:vertical-rl;text-orientation:upright;text-align:center;font-weight:700;letter-spacing:.2em;font-size:8.5pt}
-.res{font-size:11pt;font-weight:700;text-align:center}.num{text-align:right;white-space:nowrap}
-.nt{vertical-align:top;font-size:7pt;line-height:1.3;word-break:normal;text-align:justify}.on{font-weight:700}.sm{font-size:6.6pt}
-.foot td{height:5.5mm;font-weight:700;font-size:8.5pt}.sign{margin-top:1mm}.sign td{height:18mm;vertical-align:top;font-weight:700;font-size:9pt;border:0}`;
+
+const FCSS = `@page{size:A3 portrait;margin:5mm 7mm}
+.sheet{width:283mm;margin:0 auto;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;font-size:7pt;overflow:visible}
+h1{font-size:18pt;margin:0 0 1mm;text-align:center;letter-spacing:.15em;font-weight:700}
+.hd1{display:flex;justify-content:space-between;align-items:flex-end;font-size:8.8pt;margin-bottom:.8mm;line-height:1.3}
+.hd1 .r{min-width:90mm;text-align:right}
+table{border-collapse:collapse;table-layout:fixed;width:283mm}
+td{border:1px solid #000;padding:.2mm .6mm;vertical-align:middle;line-height:1.2;word-break:break-all}
+.hdt td{font-size:8.4pt;height:5.5mm;padding:.3mm .8mm}.hdt .b{text-align:center;font-weight:700}
+.th td{text-align:center;font-weight:700;font-size:7.8pt}.th .big{font-size:10pt;letter-spacing:.06em}
+.cat td{font-weight:700;background:#fff}.c{text-align:center}
+.vt{writing-mode:vertical-rl;text-orientation:upright;text-align:center;font-weight:700;letter-spacing:.15em;font-size:8pt}
+.res{font-size:10.5pt;font-weight:700;text-align:center}.num{text-align:right;white-space:nowrap}
+.nt{vertical-align:top;font-size:6.7pt;line-height:1.28;word-break:normal;text-align:justify}.on{font-weight:700}.sm{font-size:6.4pt}
+.foot td{height:5mm;font-weight:700;font-size:8.2pt}.sign{margin-top:1mm}.sign td{height:16mm;vertical-align:top;font-weight:700;font-size:8.6pt;border:0}`;
+
 const KCSS = `@page{size:A4 portrait;margin:0}
 .sheet{overflow:hidden;box-sizing:border-box;width:210mm;height:296mm;padding:25.4mm 22mm;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;font-size:12pt}
 .sheet p{margin:0 9.75mm;line-height:22pt}.r{color:#f00}
@@ -536,100 +536,116 @@ function ckText(it, s) {
   }
   return out.replace(/\n/g, '<br>');
 }
+
+/* 核心：精確比照 Excel 13020A 表格，分為 Page 1 與 Page 2 */
 function formHtml(a) {
   const p = S.projects.find(x => x.id === a.pid) || {}, c = compute(a), d = roc(a.date), t = String(a.time || ':').split(':');
   const amt = n => n ? fmt(n) : '';
-  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7.1mm"><col style="width:10.3mm"><col style="width:144.5mm"><col style="width:19.8mm"><col style="width:9mm"><col style="width:17.4mm"><col style="width:15.7mm"><col style="width:13.9mm"><col style="width:42.8mm"></colgroup>';
+  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7mm"><col style="width:10mm"><col style="width:144.5mm"><col style="width:19.5mm"><col style="width:8.5mm"><col style="width:17mm"><col style="width:15.5mm"><col style="width:14mm"><col style="width:42.5mm"></colgroup>';
 
-  // 整理所有行項目（高風險 + 一般風險 + 環境 + 其他）
-  const rows = [];
-  const addGroup = (sec) => {
-    for (const g of DATA.groups.filter(g => g.sec === sec)) {
-      if (sec === 'G' && isEnv(g)) {
-        (g.items || []).forEach(it => rows.push({it, g, blk: g.short === '環境保護' ? 'env' : 'oth'}));
-        continue;
-      }
-      rows.push({cat: g, g, blk: 'std'});
-      (g.items || []).forEach(it => rows.push({it, g, blk: 'std'}));
-    }
-    if (sec === 'G') {
-      extraItems(a).forEach(x => rows.push({it: x.item, g: x.g, blk: 'oth'}));
-    }
-  };
-
-  addGroup('H');
-  const hCount = rows.length; // 高風險截止列數
-  addGroup('G');
-
-  // 計算左側「安、全、交、維」與「環保、其他」合併儲存格
-  const left = {};
-  const stdKs = rows.map((r, k) => r.blk === 'std' ? k : -1).filter(k => k >= 0);
-  const N = stdKs.length;
-  ['安', '全', '交', '維'].forEach((ch, q) => {
-    const st = Math.floor(q * N / 4), en = Math.floor((q + 1) * N / 4);
-    left[stdKs[st]] = {span: en - st, label: ch, vt: false};
-  });
-  for (const [blk, lab] of [['env', '環境保護'], ['oth', '其他不符規定及改進事項']]) {
-    const ks = rows.map((r, k) => r.blk === blk ? k : -1).filter(k => k >= 0);
-    if (ks.length) left[ks[0]] = {span: ks.length, label: lab, vt: true};
+  // --- 第 1 頁（高風險區塊，對應 Excel 第 8 列～第 48 列） ---
+  const rows1 = [];
+  for (const g of DATA.groups.filter(g => g.sec === 'H')) {
+    rows1.push({cat: g, g, blk: 'std'});
+    (g.items || []).forEach(it => rows1.push({it, g, blk: 'std'}));
   }
+  const left1 = {};
+  const N1 = rows1.length;
+  ['安', '全', '交'].forEach((ch, q) => {
+    const st = Math.floor(q * N1 / 3), en = Math.floor((q + 1) * N1 / 3);
+    left1[st] = {span: en - st, label: ch, vt: false};
+  });
+  // 說明欄 一～七點，完全無格線連續排版
+  const notes1Html = DATA.notes.slice(0, 7).map(n => `<div style="margin-bottom:1.6mm;line-height:1.32;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('');
 
-  // 說明欄：一～九點全部整合集中在第 1 頁（高風險區塊），內部完全無格線
-  const allNotesHtml = DATA.notes.map(n => `<div style="margin-bottom:1.6mm;line-height:1.33;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('');
-
-  // 雙層表頭（一般風險與高風險欄位完全一致）
-  const theadHtml = `<thead>
-    <tr class="th"><td rowspan="2">類<br>別</td><td rowspan="2" colspan="2">項<br>次</td><td rowspan="2" class="big">稽 核 項 目<br><span style="font-size:8.5pt;letter-spacing:0;font-weight:400">(比照勞動檢查法第28條或有立即發生危險之虞情事，應立即改善)</span></td><td rowspan="2">缺失地點</td><td>稽核</td><td>上次通知</td><td colspan="2">扣款金額(元)</td><td rowspan="2" class="big">說 明</td></tr>
-    <tr class="th"><td>結果</td><td>改善日期</td><td>本次金額</td><td>累計金額</td></tr></thead>`;
-
-  let tbodyHtml = '<tbody>';
-  rows.forEach((r, k) => {
-    const L = left[k] ? `<td rowspan="${left[k].span}" class="${left[k].vt ? 'vt' : 'c'}" style="${left[k].vt ? '' : 'font-weight:700;font-size:10pt'}">${esc(left[k].label)}</td>` : '';
-    
-    // 說明欄：第 0 列輸出涵蓋第 1 頁整頁長度的說明單元格；後續列不再輸出任何說明格線
-    let Nn = '';
-    if (k === 0) {
-      Nn = `<td rowspan="${hCount}" class="nt" style="vertical-align:top;padding:1.5mm">${allNotesHtml}</td>`;
-    } else if (k === hCount) {
-      Nn = `<td rowspan="${rows.length - hCount}" class="nt" style="vertical-align:top;padding:1.5mm"></td>`;
-    }
-
+  let tbody1 = '<tbody>';
+  rows1.forEach((r, k) => {
+    const L = left1[k] ? `<td rowspan="${left1[k].span}" class="${left1[k].vt ? 'vt' : 'c'}" style="${left1[k].vt ? '' : 'font-weight:700;font-size:9.5pt'}">${esc(left1[k].label)}</td>` : '';
+    const Nn = (k === 0) ? `<td rowspan="${rows1.length}" class="nt" style="vertical-align:top;padding:1.2mm 1.5mm">${notes1Html}</td>` : '';
     if (r.cat) {
-      // 遇一般風險開頭插入分隔大標
-      const isFirstG = (k === hCount);
-      const catBar = isFirstG ? `<tr class="th" style="background:#fafafa"><td colspan="10" class="big" style="text-align:center;height:6.5mm;font-size:10.5pt;letter-spacing:.08em">一般風險稽核項目</td></tr>` : '';
-      tbodyHtml += `${catBar}<tr class="cat">${L}<td></td><td class="c">${esc(r.cat.catno || '')}</td><td colspan="6">${esc(r.cat.title)}</td>${Nn}</tr>`;
+      tbody1 += `<tr class="cat">${L}<td></td><td class="c">${esc(r.cat.catno || '')}</td><td colspan="6">${esc(r.cat.title)}</td>${Nn}</tr>`;
       return;
     }
     const it = r.it, s = ist(a, it.key), rr = c.rows[it.key] || {cur:0, cum:0, prevDate:''};
     const pv = (s.res === 'x' || s.res === 't') && rr.prevDate ? rocStr(rr.prevDate).replace('年', '/').replace('月', '/').replace('日', '') : '';
-    tbodyHtml += `<tr>${L}<td class="c">${it.tag || ''}</td><td class="c">${esc(it.no)}</td><td>${ckText(it, s)}</td><td class="sm">${esc(s.place)}</td><td class="res">${SYM[s.res] || ''}</td><td class="c sm">${esc(pv)}</td><td class="num">${s.res === 'x' ? amt(rr.cur) : ''}</td><td class="num">${rr.cum ? amt(rr.cum) : ''}</td>${Nn}</tr>`;
+    tbody1 += `<tr>${L}<td class="c">${it.tag || ''}</td><td class="c">${esc(it.no)}</td><td>${ckText(it, s)}</td><td class="sm">${esc(s.place)}</td><td class="res">${SYM[s.res] || ''}</td><td class="c sm">${esc(pv)}</td><td class="num">${s.res === 'x' ? amt(rr.cur) : ''}</td><td class="num">${rr.cum ? amt(rr.cum) : ''}</td>${Nn}</tr>`;
   });
-  tbodyHtml += '</tbody>';
+  tbody1 += '</tbody>';
 
-  // 結算扣款與簽章
-  const ft = `<table class="foot"><colgroup><col style="width:34mm"><col style="width:45mm"><col style="width:27mm"><col style="width:80.2mm"><col style="width:26.4mm"><col style="width:72.4mm"></colgroup>
+  // --- 第 2 頁（一般風險＋環保＋其他＋簽章，對應 Excel 第 49 列～第 144 列） ---
+  const rows2 = [];
+  for (const g of DATA.groups.filter(g => g.sec === 'G')) {
+    if (isEnv(g)) {
+      (g.items || []).forEach(it => rows2.push({it, g, blk: g.short === '環境保護' ? 'env' : 'oth'}));
+      continue;
+    }
+    rows2.push({cat: g, g, blk: 'std'});
+    (g.items || []).forEach(it => rows2.push({it, g, blk: 'std'}));
+  }
+  extraItems(a).forEach(x => rows2.push({it: x.item, g: x.g, blk: 'oth'}));
+
+  const left2 = {};
+  const stdKs = rows2.map((r, k) => r.blk === 'std' ? k : -1).filter(k => k >= 0);
+  const N2 = stdKs.length;
+  ['安', '全', '交', '維'].forEach((ch, q) => {
+    const st = Math.floor(q * N2 / 4), en = Math.floor((q + 1) * N2 / 4);
+    left2[stdKs[st]] = {span: en - st, label: ch, vt: false};
+  });
+  for (const [blk, lab] of [['env', '環境保護'], ['oth', '其他不符規定及改進事項']]) {
+    const ks = rows2.map((r, k) => r.blk === blk ? k : -1).filter(k => k >= 0);
+    if (ks.length) left2[ks[0]] = {span: ks.length, label: lab, vt: true};
+  }
+
+  // 第 2 頁說明欄：八～九點，無格線排版
+  const notes2Html = DATA.notes.slice(7).map(n => `<div style="margin-bottom:2mm;line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('');
+
+  let tbody2 = '<tbody>';
+  rows2.forEach((r, k) => {
+    const L = left2[k] ? `<td rowspan="${left2[k].span}" class="${left2[k].vt ? 'vt' : 'c'}" style="${left2[k].vt ? '' : 'font-weight:700;font-size:9.5pt'}">${esc(left2[k].label)}</td>` : '';
+    const Nn = (k === 0) ? `<td rowspan="${rows2.length}" class="nt" style="vertical-align:top;padding:1.5mm">${notes2Html}</td>` : '';
+    if (r.cat) {
+      tbody2 += `<tr class="cat">${L}<td></td><td class="c">${esc(r.cat.catno || '')}</td><td colspan="6">${esc(r.cat.title)}</td>${Nn}</tr>`;
+      return;
+    }
+    const it = r.it, s = ist(a, it.key), rr = c.rows[it.key] || {cur:0, cum:0, prevDate:''};
+    const pv = (s.res === 'x' || s.res === 't') && rr.prevDate ? rocStr(rr.prevDate).replace('年', '/').replace('月', '/').replace('日', '') : '';
+    tbody2 += `<tr>${L}<td class="c">${it.tag || ''}</td><td class="c">${esc(it.no)}</td><td>${ckText(it, s)}</td><td class="sm">${esc(s.place)}</td><td class="res">${SYM[s.res] || ''}</td><td class="c sm">${esc(pv)}</td><td class="num">${s.res === 'x' ? amt(rr.cur) : ''}</td><td class="num">${rr.cum ? amt(rr.cum) : ''}</td>${Nn}</tr>`;
+  });
+  tbody2 += '</tbody>';
+
+  const thead1 = `<thead>
+    <tr class="th"><td rowspan="2">類<br>別</td><td rowspan="2" colspan="2">項<br>次</td><td rowspan="2" class="big">高 風 險 稽 核 項 目<br><span style="font-size:8pt;letter-spacing:0;font-weight:400">(比照勞動檢查法第28條或有立即發生危險之虞情事，應立即改善)</span></td><td rowspan="2">缺失地點</td><td>稽核</td><td>上次通知</td><td colspan="2">扣款金額(元)</td><td rowspan="2" class="big">說 明</td></tr>
+    <tr class="th"><td>結果</td><td>改善日期</td><td>本次金額</td><td>累計金額</td></tr></thead>`;
+
+  const thead2 = `<thead>
+    <tr class="th"><td rowspan="2">類<br>別</td><td rowspan="2" colspan="2">項<br>次</td><td rowspan="2" class="big">一 般 風 險 稽 核 項 目</td><td rowspan="2">缺失地點</td><td>稽核</td><td>上次通知</td><td colspan="2">扣款金額(元)</td><td rowspan="2" class="big">說 明</td></tr>
+    <tr class="th"><td>結果</td><td>改善日期</td><td>本次金額</td><td>累計金額</td></tr></thead>`;
+
+  const ft = `<table class="foot"><colgroup><col style="width:34mm"><col style="width:45mm"><col style="width:27mm"><col style="width:80.2mm"><col style="width:26.4mm"><col style="width:70.4mm"></colgroup>
     <tr><td colspan="4"></td><td class="c">本次扣款金額</td><td class="num">${fmt(c.total)}</td></tr>
     <tr><td class="c">本次稽核缺失數</td><td class="c">${c.defects}</td><td class="c">連前累計缺失數</td><td class="c">${c.cumDefects}</td><td class="c">累計扣款金額</td><td class="num">${fmt(c.cumTotal)}</td></tr></table>`;
 
-  const sg = `<table class="sign" style="width:285mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
+  const sg = `<table class="sign" style="width:283mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:7.5pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
 
-  // 工程編號與金額資訊 100% 分布對齊兩端與置中
-  const infoRowTable = `<table style="width:100%;border-collapse:collapse;border:0;table-layout:auto"><tr>
-    <td style="border:0;padding:0;text-align:left;width:18%">${esc(p.no)}</td>
-    <td style="border:0;padding:0;text-align:center;width:32%">工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</td>
-    <td style="border:0;padding:0;text-align:center;width:25%">開工日期：${esc(rocStr(p.start))}</td>
-    <td style="border:0;padding:0;text-align:right;width:25%">預定竣工日期：${esc(rocStr(p.end))}</td>
+  // 100% 分散對齊無框線內嵌表格
+  const infoRowTable = `<table style="width:100%;border-collapse:collapse;border:0;table-layout:fixed"><tr>
+    <td style="border:0;padding:0;text-align:left;width:20%;font-size:8.4pt">${esc(p.no)}</td>
+    <td style="border:0;padding:0;text-align:center;width:30%;font-size:8.4pt">工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</td>
+    <td style="border:0;padding:0;text-align:center;width:25%;font-size:8.4pt">開工日期：${esc(rocStr(p.start))}</td>
+    <td style="border:0;padding:0;text-align:right;width:25%;font-size:8.4pt">預定竣工日期：${esc(rocStr(p.end))}</td>
   </tr></table>`;
 
-  const hd = `<h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
-  <div class="hd1"><div><b>填報單位：${esc(p.unit)}</b></div><div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次</div></div>
-  <table class="hdt"><colgroup><col style="width:21.9mm"><col style="width:190mm"><col style="width:28.8mm"><col style="width:44.3mm"></colgroup>
+  const hd = (pageNo) => `<h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
+  <div class="hd1"><div><b>填報單位：${esc(p.unit)}</b></div><div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次（第 ${pageNo} 頁，共 2 頁）</div></div>
+  <table class="hdt"><colgroup><col style="width:21mm"><col style="width:190mm"><col style="width:28mm"><col style="width:44mm"></colgroup>
   <tr><td class="b">工程名稱：</td><td><b>${esc(p.name)}</b></td><td class="b">監造單位</td><td>${esc(p.sup)}</td></tr>
   <tr><td class="b">工程編號：</td><td style="padding:0 2mm">${infoRowTable}</td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
 
-  // 單一連續串接表格，透過 CSS 分頁自動落入標準 2 頁 A3 版面
-  return `<div class="sheet"><div class="in" style="zoom:${Math.max(0.82, 0.945 - 0.003 * (a.xs || []).length)}">${hd}<table>${COLS}${theadHtml}${tbodyHtml}</table>${ft}${sg}</div></div>`;
+  // 第 1 頁與第 2 頁各具備精準的高度，保證不多不少剛好 2 頁，字體清晰且佈滿 A3
+  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page">${hd(1)}<table>${COLS}${thead1}${tbody1}</table></div>`;
+  const page2 = `<div class="sheet" style="zoom:0.915">${hd(2)}<table>${COLS}${thead2}${tbody2}</table>${ft}${sg}</div>`;
+
+  return page1 + page2;
 }
 
 function photoHtml(a) {
@@ -669,7 +685,7 @@ function docHtml(kind, a, mobile) {
     const k = form ? .64 : .86;
     css = scU(css, k).replace(/zoom:[\d.]+;?/g, '');
     body = scU(body, k).replace(/zoom:[\d.]+;?/g, '');
-    if (form) extra = '@page{size:A4 portrait;margin:6mm}.sheet{padding:0 13mm!important}';
+    if (form) extra = '@page{size:A4 portrait;margin:5mm}.sheet{padding:0 10mm!important}';
     else extra = '@page{margin:0}.sheet{margin:0 auto!important;height:auto!important;overflow:visible!important;page-break-after:auto!important;break-after:auto!important}.sheet+.sheet{page-break-before:always;break-before:page}';
     tip = '手機：已自動縮成 A4 一張；紙張 A4 直式，縮放 100%';
     vp = '<meta name="viewport" content="width=794">';
