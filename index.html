@@ -536,12 +536,11 @@ function ckText(it, s) {
   }
   return out.replace(/\n/g, '<br>');
 }
-
 function formHtml(a) {
   const p = S.projects.find(x => x.id === a.pid) || {}, c = compute(a), d = roc(a.date), t = String(a.time || ':').split(':');
   const amt = n => n ? fmt(n) : '';
   const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7.1mm"><col style="width:10.3mm"><col style="width:144.5mm"><col style="width:19.8mm"><col style="width:9mm"><col style="width:17.4mm"><col style="width:15.7mm"><col style="width:13.9mm"><col style="width:42.8mm"></colgroup>';
-  
+
   const mkPage = (sec, label) => {
     const rows = [];
     for (const g of DATA.groups.filter(g => g.sec === sec)) {
@@ -556,17 +555,12 @@ function formHtml(a) {
       extraItems(a).forEach(x => rows.push({it: x.item, g: x.g, blk: 'oth'}));
     }
 
-    const left = {}, note = {};
+    const left = {};
     if (sec === 'H') {
       const N = rows.length;
       ['安', '全', '交', '維'].forEach((ch, q) => {
         const st = Math.floor(q * N / 4), en = Math.floor((q + 1) * N / 4);
         left[st] = {span: en - st, label: ch, vt: false};
-      });
-      const starts = [0, 3, 9, 14, 23, 30, 38];
-      starts.forEach((st, q) => {
-        const en = q + 1 < starts.length ? starts[q + 1] : rows.length;
-        note[st] = {span: en - st, txt: DATA.notes[q]};
       });
     } else {
       const stdKs = rows.map((r, k) => r.blk === 'std' ? k : -1).filter(k => k >= 0);
@@ -579,15 +573,11 @@ function formHtml(a) {
         const ks = rows.map((r, k) => r.blk === blk ? k : -1).filter(k => k >= 0);
         if (ks.length) left[ks[0]] = {span: ks.length, label: lab, vt: true};
       }
-      // 說明欄對齊修復：第 1 則覆蓋整個 std 區塊，第 2 則覆蓋 env 與 oth 區塊，避免提早截斷導致欄位平移
-      if (stdKs.length) {
-        note[stdKs[0]] = {span: stdKs.length, txt: DATA.notes[7]};
-      }
-      const envKs = rows.map((r, k) => (r.blk === 'env' || r.blk === 'oth') ? k : -1).filter(k => k >= 0);
-      if (envKs.length) {
-        note[envKs[0]] = {span: envKs.length, txt: DATA.notes[8]};
-      }
     }
+
+    // 說明欄內容：第 1 頁顯示一～七點，第 2 頁顯示八～九點，內部無橫向框線
+    const notesArr = sec === 'H' ? DATA.notes.slice(0, 7) : DATA.notes.slice(7);
+    const noteHtml = notesArr.map(n => `<div style="margin-bottom:1.5mm;line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('');
 
     let h = `<table>${COLS}<thead>
       <tr class="th"><td rowspan="2">類<br>別</td><td rowspan="2" colspan="2">項<br>次</td><td rowspan="2" class="big">${label}</td><td rowspan="2">缺失地點</td><td>稽核</td><td>上次通知</td><td colspan="2">扣款金額(元)</td><td rowspan="2" class="big">說 明</td></tr>
@@ -595,7 +585,8 @@ function formHtml(a) {
 
     rows.forEach((r, k) => {
       const L = left[k] ? `<td rowspan="${left[k].span}" class="${left[k].vt ? 'vt' : 'c'}" style="${left[k].vt ? '' : 'font-weight:700;font-size:10pt'}">${esc(left[k].label)}</td>` : '';
-      const Nn = note[k] ? `<td rowspan="${note[k].span}" class="nt">${esc(note[k].txt[0])}${esc(note[k].txt[1])}</td>` : '';
+      // 說明欄只在第 0 列輸出，span 涵蓋整頁所有列，達成內部無分隔線之效果
+      const Nn = (k === 0) ? `<td rowspan="${rows.length}" class="nt" style="vertical-align:top;padding:1mm 1.5mm">${noteHtml}</td>` : '';
 
       if (r.cat) {
         h += `<tr class="cat">${L}<td></td><td class="c">${esc(r.cat.catno || '')}</td><td colspan="6">${esc(r.cat.title)}</td>${Nn}</tr>`;
@@ -613,14 +604,16 @@ function formHtml(a) {
   const ft = `<table class="foot"><colgroup><col style="width:34mm"><col style="width:45mm"><col style="width:27mm"><col style="width:80.2mm"><col style="width:26.4mm"><col style="width:72.4mm"></colgroup>
     <tr><td colspan="4"></td><td class="c">本次扣款金額</td><td class="num">${fmt(c.total)}</td></tr>
     <tr><td class="c">本次稽核缺失數</td><td class="c">${c.defects}</td><td class="c">連前累計缺失數</td><td class="c">${c.cumDefects}</td><td class="c">累計扣款金額</td><td class="num">${fmt(c.cumTotal)}</td></tr></table>`;
+  
+  // 頁首工程編號資訊分散佈滿
   const hd = (pageNo) => `<h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
   <div class="hd1"><div><b>填報單位：${esc(p.unit)}</b></div><div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次（第 ${pageNo} 頁，共 2 頁）</div></div>
   <table class="hdt"><colgroup><col style="width:21.9mm"><col style="width:190mm"><col style="width:28.8mm"><col style="width:44.3mm"></colgroup>
   <tr><td class="b">工程名稱：</td><td><b>${esc(p.name)}</b></td><td class="b">監造單位</td><td>${esc(p.sup)}</td></tr>
-  <tr><td class="b">工程編號：</td><td style="white-space:nowrap;font-size:8.4pt">${esc(p.no)}  工程契約金額：${p.contract ? fmt(p.contract) : ''} 元  開工日期：${esc(rocStr(p.start))}  預定竣工日期：${esc(rocStr(p.end))}</td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
+  <tr><td class="b">工程編號：</td><td style="font-size:8.4pt;padding:0 2mm"><div style="display:flex;justify-content:space-between;align-items:center;width:100%"><span>${esc(p.no)}</span><span>工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</span><span>開工日期：${esc(rocStr(p.start))}</span><span>預定竣工日期：${esc(rocStr(p.end))}</span></div></td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
+  
   const sg = `<table class="sign" style="width:285mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
 
-  // 第一頁：高風險項目；第二頁：一般風險項目＋結算與簽章，確保剛好 2 頁
   const page1 = `<div class="sheet"><div class="in">${hd(1)}${mkPage('H', '高風險稽核項目<br><span style="font-size:8.5pt;letter-spacing:0">(比照勞動檢查法第28條或有立即發生危險之虞情事，應立即改善)</span>')}</div></div>`;
   const page2 = `<div class="sheet"><div class="in" style="zoom:${Math.max(0.82, 0.94 - 0.003 * (a.xs || []).length)}">${hd(2)}${mkPage('G', '一般風險稽核項目')}${ft}${sg}</div></div>`;
   return page1 + page2;
