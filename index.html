@@ -408,7 +408,8 @@ function renderList() {
     if (S.filter === 'F') items = items.filter(it => { const s = a.items[it.key]; return s && (s.res || s.photos.length || s.ck.length); });
     if (!items.length) continue;
     const filled = g.items.filter(it => (a.items[it.key] || {}).res).length;
-    const open = q || S.filter === 'F' ? true : (S.collapsed[g.gid] !== true);
+    // 預設為收合狀態，小項不先顯示；點擊才展開
+    const open = Boolean(q || S.filter === 'F' || S.collapsed[g.gid]);
     const title = (g.sec === 'G' && !isEnv(g) ? '一般 · ' : g.sec === 'H' ? '高風險 · ' : '') + (g.catno ? g.catno + ' ' : '') + g.short;
     html.push(`<div class="grp"><button class="gh" data-act="grp" data-g="${g.gid}" aria-expanded="${open}"><span class="cv">▸</span><span>${esc(title)}</span><span class="pg">${filled}/${g.items.length}</span></button>`);
     if (open) for (const it of items) html.push(itemHtml(it, g, a, p, c));
@@ -501,20 +502,29 @@ table{border-collapse:collapse;width:100%}td,th{border:1px solid #000;padding:.4
 .c{text-align:center}.vm{vertical-align:middle}
 @media print{body{background:#fff}.tb{display:none}.sheet{margin:0;box-shadow:none}}`;
 
-const FCSS = `@page{size:A3 portrait;margin:5mm 7mm}
-.sheet{width:283mm;margin:0 auto;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;font-size:7pt;overflow:visible}
+const FCSS = `@page{size:A3 portrait;margin:6mm 8mm}
+.sheet{width:283mm;margin:0 auto;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;overflow:visible;box-sizing:border-box}
+.sheet:first-child{page-break-after:always;break-after:page}
 h1{font-size:18pt;margin:0 0 1mm;text-align:center;letter-spacing:.15em;font-weight:700}
 .hd1{display:flex;justify-content:space-between;align-items:flex-end;font-size:8.8pt;margin-bottom:.8mm;line-height:1.3}
 .hd1 .r{min-width:90mm;text-align:right}
 table{border-collapse:collapse;table-layout:fixed;width:283mm}
-td{border:1px solid #000;padding:.2mm .6mm;vertical-align:middle;line-height:1.2;word-break:break-all}
-.hdt td{font-size:8.4pt;height:5.5mm;padding:.3mm .8mm}.hdt .b{text-align:center;font-weight:700}
-.th td{text-align:center;font-weight:700;font-size:7.8pt}.th .big{font-size:10pt;letter-spacing:.06em}
-.cat td{font-weight:700;background:#fff}.c{text-align:center}
-.vt{writing-mode:vertical-rl;text-orientation:upright;text-align:center;font-weight:700;letter-spacing:.15em;font-size:8pt}
-.res{font-size:10.5pt;font-weight:700;text-align:center}.num{text-align:right;white-space:nowrap}
-.nt{vertical-align:top;font-size:6.7pt;line-height:1.28;word-break:normal;text-align:justify}.on{font-weight:700}.sm{font-size:6.4pt}
-.foot td{height:5mm;font-weight:700;font-size:8.2pt}.sign{margin-top:1mm}.sign td{height:16mm;vertical-align:top;font-weight:700;font-size:8.6pt;border:0}`;
+td{border:1px solid #000;word-break:break-all}
+.hdt td{font-size:8.4pt;height:5.5mm;padding:.3mm .8mm;vertical-align:middle}.hdt .b{text-align:center;font-weight:700}
+.th td{text-align:center;font-weight:700;font-size:7.8pt;vertical-align:middle}.th .big{font-size:10pt;letter-spacing:.06em}
+.cat td{font-weight:700;background:#fff;vertical-align:middle}.c{text-align:center}
+.vt{writing-mode:vertical-rl;text-orientation:upright;text-align:center;font-weight:700;letter-spacing:.15em;font-size:8.2pt}
+.res{font-size:11pt;font-weight:700;text-align:center}.num{text-align:right;white-space:nowrap}
+.nt{vertical-align:top;line-height:1.28;word-break:normal;text-align:justify}.on{font-weight:700}
+.foot td{height:5.2mm;font-weight:700;font-size:8.4pt;vertical-align:middle}.sign{margin-top:1.5mm}.sign td{height:17mm;vertical-align:top;font-weight:700;font-size:8.8pt;border:0}
+/* 第一頁高度優化：適度加大 padding 與字體，讓 41 列優雅佈滿整張 A3 */
+.p1-table td{padding:1.4mm .8mm;font-size:7.8pt;line-height:1.38;vertical-align:middle}
+.p1-table .sm{font-size:7.2pt}
+.p1-table .nt{font-size:7.2pt;padding:1.5mm 1.8mm}
+/* 第二頁高度優化：緊湊比例，確保 86 列＋結算＋簽章剛好完整收納於單張 A3 */
+.p2-table td{padding:.22mm .6mm;font-size:6.9pt;line-height:1.2;vertical-align:middle}
+.p2-table .sm{font-size:6.4pt}
+.p2-table .nt{font-size:6.6pt;padding:1.2mm 1.5mm};`;
 
 const KCSS = `@page{size:A4 portrait;margin:0}
 .sheet{overflow:hidden;box-sizing:border-box;width:210mm;height:296mm;padding:25.4mm 22mm;font-family:"標楷體","DFKai-SB","BiauKai","Kaiti TC","KaiTi","AR PL UKai TW",serif;font-size:12pt}
@@ -541,7 +551,7 @@ function ckText(it, s) {
 function formHtml(a) {
   const p = S.projects.find(x => x.id === a.pid) || {}, c = compute(a), d = roc(a.date), t = String(a.time || ':').split(':');
   const amt = n => n ? fmt(n) : '';
-  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7.1mm"><col style="width:10.3mm"><col style="width:144.5mm"><col style="width:19.8mm"><col style="width:9mm"><col style="width:17.4mm"><col style="width:15.7mm"><col style="width:13.9mm"><col style="width:42.8mm"></colgroup>';
+  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7mm"><col style="width:10mm"><col style="width:144.5mm"><col style="width:19.5mm"><col style="width:8.5mm"><col style="width:17mm"><col style="width:15.5mm"><col style="width:14mm"><col style="width:42.5mm"></colgroup>';
 
   // --- 第 1 頁（高風險區塊，對應 Excel 第 1 頁） ---
   const rows1 = [];
@@ -556,9 +566,9 @@ function formHtml(a) {
     left1[st] = {span: en - st, label: ch, vt: false};
   });
 
-  // 說明欄 一～七點，以 flex 分散均勻排列覆蓋整頁高度
-  const notes1Html = `<div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;min-height:240mm;box-sizing:border-box">` +
-    DATA.notes.slice(0, 7).map(n => `<div style="line-height:1.32;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
+  // 說明欄 一～七點，以 flex 分散均勻排列覆蓋整頁高度（留白均勻、無任何格線）
+  const notes1Html = `<div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;min-height:280mm;box-sizing:border-box">` +
+    DATA.notes.slice(0, 7).map(n => `<div style="line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
     `</div>`;
 
   let tbody1 = '<tbody>';
@@ -599,8 +609,8 @@ function formHtml(a) {
     if (ks.length) left2[ks[0]] = {span: ks.length, label: lab, vt: true};
   }
 
-  // 說明欄 八～九點置頂，下方保留大片空白（留白比照 Excel）
-  const notes2Html = `<div style="display:flex;flex-direction:column;gap:8mm;padding-top:1.5mm">` +
+  // 說明欄 八～九點置頂，下方保留完整空白
+  const notes2Html = `<div style="display:flex;flex-direction:column;gap:8mm;padding-top:2mm">` +
     DATA.notes.slice(7).map(n => `<div style="line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
     `</div>`;
 
@@ -630,32 +640,31 @@ function formHtml(a) {
     <tr><td colspan="4"></td><td class="c">本次扣款金額</td><td class="num">${fmt(c.total)}</td></tr>
     <tr><td class="c">本次稽核缺失數</td><td class="c">${c.defects}</td><td class="c">連前累計缺失數</td><td class="c">${c.cumDefects}</td><td class="c">累計扣款金額</td><td class="num">${fmt(c.cumTotal)}</td></tr></table>`;
 
-  const sg = `<table class="sign" style="width:285mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
+  const sg = `<table class="sign" style="width:283mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
 
   const infoRowTable = `<table style="width:100%;border-collapse:collapse;border:0;table-layout:fixed"><tr>
-    <td style="border:0;padding:0;text-align:left;width:20%;font-size:8.6pt">${esc(p.no)}</td>
-    <td style="border:0;padding:0;text-align:center;width:30%;font-size:8.6pt">工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</td>
-    <td style="border:0;padding:0;text-align:center;width:25%;font-size:8.6pt">開工日期：${esc(rocStr(p.start))}</td>
-    <td style="border:0;padding:0;text-align:right;width:25%;font-size:8.6pt">預定竣工日期：${esc(rocStr(p.end))}</td>
+    <td style="border:0;padding:0;text-align:left;width:20%;font-size:8.4pt">${esc(p.no)}</td>
+    <td style="border:0;padding:0;text-align:center;width:30%;font-size:8.4pt">工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</td>
+    <td style="border:0;padding:0;text-align:center;width:25%;font-size:8.4pt">開工日期：${esc(rocStr(p.start))}</td>
+    <td style="border:0;padding:0;text-align:right;width:25%;font-size:8.4pt">預定竣工日期：${esc(rocStr(p.end))}</td>
   </tr></table>`;
 
-  // 頁數直接調整到頁面最右上角
-  const hd = (pageNo) => `<div style="position:relative;width:285mm;margin:0 auto">
-    <div style="position:absolute;top:0;right:0;font-size:9.5pt;font-weight:700;line-height:1">第 ${pageNo} 頁，共 2 頁</div>
+  // 頁數在最右上角頂點
+  const hd = (pageNo) => `<div style="position:relative;width:283mm;margin:0 auto">
+    <div style="position:absolute;top:0;right:0;font-size:9.2pt;font-weight:700;line-height:1">第 ${pageNo} 頁，共 2 頁</div>
     <h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
   </div>
-  <div class="hd1" style="width:285mm;margin:0 auto 1mm auto">
+  <div class="hd1" style="width:283mm;margin:0 auto .8mm auto">
     <div><b>填報單位：${esc(p.unit)}</b></div>
     <div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次</div>
   </div>
-  <table class="hdt" style="width:285mm;margin:0 auto"><colgroup><col style="width:21mm"><col style="width:190mm"><col style="width:28mm"><col style="width:46mm"></colgroup>
+  <table class="hdt" style="width:283mm;margin:0 auto"><colgroup><col style="width:21mm"><col style="width:189mm"><col style="width:28mm"><col style="width:45mm"></colgroup>
   <tr><td class="b">工程名稱：</td><td><b>${esc(p.name)}</b></td><td class="b">監造單位</td><td>${esc(p.sup)}</td></tr>
   <tr><td class="b">工程編號：</td><td style="padding:0 2mm">${infoRowTable}</td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
 
-  // 兩頁使用完全一致的寬度 (285mm) 與等比比例 (z)，保證第 1 頁與第 2 頁表格寬度 100% 相同
-  const z = Math.max(0.82, 0.915 - 0.003 * (a.xs || []).length);
-  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page"><div class="in" style="width:285mm;zoom:${z};margin:0 auto">${hd(1)}<table>${COLS}${thead1}${tbody1}</table></div></div>`;
-  const page2 = `<div class="sheet"><div class="in" style="width:285mm;zoom:${z};margin:0 auto">${hd(2)}<table>${COLS}${thead2}${tbody2}</table>${ft}${sg}</div></div>`;
+  // 兩頁寬度固定為 283mm 完全對齊，第 1 頁與第 2 頁各自採用專屬行高排版，均勻佈滿單頁 A3
+  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page"><div class="in" style="width:283mm;margin:0 auto">${hd(1)}<table class="p1-table">${COLS}${thead1}${tbody1}</table></div></div>`;
+  const page2 = `<div class="sheet"><div class="in" style="width:283mm;margin:0 auto">${hd(2)}<table class="p2-table">${COLS}${thead2}${tbody2}</table>${ft}${sg}</div></div>`;
 
   return page1 + page2;
 }
