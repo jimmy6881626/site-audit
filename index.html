@@ -541,9 +541,9 @@ function ckText(it, s) {
 function formHtml(a) {
   const p = S.projects.find(x => x.id === a.pid) || {}, c = compute(a), d = roc(a.date), t = String(a.time || ':').split(':');
   const amt = n => n ? fmt(n) : '';
-  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7mm"><col style="width:10mm"><col style="width:144.5mm"><col style="width:19.5mm"><col style="width:8.5mm"><col style="width:17mm"><col style="width:15.5mm"><col style="width:14mm"><col style="width:42.5mm"></colgroup>';
+  const COLS = '<colgroup><col style="width:4.5mm"><col style="width:7.1mm"><col style="width:10.3mm"><col style="width:144.5mm"><col style="width:19.8mm"><col style="width:9mm"><col style="width:17.4mm"><col style="width:15.7mm"><col style="width:13.9mm"><col style="width:42.8mm"></colgroup>';
 
-  // --- 第 1 頁（高風險區塊，對應 Excel 第 8 列～第 48 列） ---
+  // --- 第 1 頁（高風險區塊，對應 Excel 第 1 頁） ---
   const rows1 = [];
   for (const g of DATA.groups.filter(g => g.sec === 'H')) {
     rows1.push({cat: g, g, blk: 'std'});
@@ -555,13 +555,16 @@ function formHtml(a) {
     const st = Math.floor(q * N1 / 3), en = Math.floor((q + 1) * N1 / 3);
     left1[st] = {span: en - st, label: ch, vt: false};
   });
-  // 說明欄 一～七點，完全無格線連續排版
-  const notes1Html = DATA.notes.slice(0, 7).map(n => `<div style="margin-bottom:1.6mm;line-height:1.32;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('');
+
+  // 說明欄 一～七點，以 flex 分散均勻排列覆蓋整頁高度
+  const notes1Html = `<div style="display:flex;flex-direction:column;justify-content:space-between;height:100%;min-height:240mm;box-sizing:border-box">` +
+    DATA.notes.slice(0, 7).map(n => `<div style="line-height:1.32;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
+    `</div>`;
 
   let tbody1 = '<tbody>';
   rows1.forEach((r, k) => {
     const L = left1[k] ? `<td rowspan="${left1[k].span}" class="${left1[k].vt ? 'vt' : 'c'}" style="${left1[k].vt ? '' : 'font-weight:700;font-size:9.5pt'}">${esc(left1[k].label)}</td>` : '';
-    const Nn = (k === 0) ? `<td rowspan="${rows1.length}" class="nt" style="vertical-align:top;padding:1.2mm 1.5mm">${notes1Html}</td>` : '';
+    const Nn = (k === 0) ? `<td rowspan="${rows1.length}" class="nt" style="vertical-align:top;padding:1.5mm">${notes1Html}</td>` : '';
     if (r.cat) {
       tbody1 += `<tr class="cat">${L}<td></td><td class="c">${esc(r.cat.catno || '')}</td><td colspan="6">${esc(r.cat.title)}</td>${Nn}</tr>`;
       return;
@@ -572,7 +575,7 @@ function formHtml(a) {
   });
   tbody1 += '</tbody>';
 
-  // --- 第 2 頁（一般風險＋環保＋其他＋簽章，對應 Excel 第 49 列～第 144 列） ---
+  // --- 第 2 頁（一般風險＋環保＋其他＋簽章，對應 Excel 第 2 頁） ---
   const rows2 = [];
   for (const g of DATA.groups.filter(g => g.sec === 'G')) {
     if (isEnv(g)) {
@@ -596,8 +599,10 @@ function formHtml(a) {
     if (ks.length) left2[ks[0]] = {span: ks.length, label: lab, vt: true};
   }
 
-  // 第 2 頁說明欄：八～九點，無格線排版
-  const notes2Html = DATA.notes.slice(7).map(n => `<div style="margin-bottom:2mm;line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('');
+  // 說明欄 八～九點置頂，下方保留大片空白（留白比照 Excel）
+  const notes2Html = `<div style="display:flex;flex-direction:column;gap:8mm;padding-top:1.5mm">` +
+    DATA.notes.slice(7).map(n => `<div style="line-height:1.35;text-align:justify"><b>${esc(n[0])}</b>${esc(n[1])}</div>`).join('') +
+    `</div>`;
 
   let tbody2 = '<tbody>';
   rows2.forEach((r, k) => {
@@ -625,25 +630,32 @@ function formHtml(a) {
     <tr><td colspan="4"></td><td class="c">本次扣款金額</td><td class="num">${fmt(c.total)}</td></tr>
     <tr><td class="c">本次稽核缺失數</td><td class="c">${c.defects}</td><td class="c">連前累計缺失數</td><td class="c">${c.cumDefects}</td><td class="c">累計扣款金額</td><td class="num">${fmt(c.cumTotal)}</td></tr></table>`;
 
-  const sg = `<table class="sign" style="width:283mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:7.5pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
+  const sg = `<table class="sign" style="width:285mm"><tr><td style="width:95mm">會同或被知會人員 ${esc(a.attendee)}</td><td style="width:90mm">稽核人員 ${esc(a.auditor)}</td><td style="width:60mm">單位主管<br><span style="font-weight:400;font-size:8pt">(工務段稽核者免核章)</span></td><td>機關首長</td></tr></table>`;
 
-  // 100% 分散對齊無框線內嵌表格
   const infoRowTable = `<table style="width:100%;border-collapse:collapse;border:0;table-layout:fixed"><tr>
-    <td style="border:0;padding:0;text-align:left;width:20%;font-size:8.4pt">${esc(p.no)}</td>
-    <td style="border:0;padding:0;text-align:center;width:30%;font-size:8.4pt">工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</td>
-    <td style="border:0;padding:0;text-align:center;width:25%;font-size:8.4pt">開工日期：${esc(rocStr(p.start))}</td>
-    <td style="border:0;padding:0;text-align:right;width:25%;font-size:8.4pt">預定竣工日期：${esc(rocStr(p.end))}</td>
+    <td style="border:0;padding:0;text-align:left;width:20%;font-size:8.6pt">${esc(p.no)}</td>
+    <td style="border:0;padding:0;text-align:center;width:30%;font-size:8.6pt">工程契約金額：${p.contract ? fmt(p.contract) : ''} 元</td>
+    <td style="border:0;padding:0;text-align:center;width:25%;font-size:8.6pt">開工日期：${esc(rocStr(p.start))}</td>
+    <td style="border:0;padding:0;text-align:right;width:25%;font-size:8.6pt">預定竣工日期：${esc(rocStr(p.end))}</td>
   </tr></table>`;
 
-  const hd = (pageNo) => `<h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
-  <div class="hd1"><div><b>填報單位：${esc(p.unit)}</b></div><div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次（第 ${pageNo} 頁，共 2 頁）</div></div>
-  <table class="hdt"><colgroup><col style="width:21mm"><col style="width:190mm"><col style="width:28mm"><col style="width:44mm"></colgroup>
+  // 頁數直接調整到頁面最右上角
+  const hd = (pageNo) => `<div style="position:relative;width:285mm;margin:0 auto">
+    <div style="position:absolute;top:0;right:0;font-size:9.5pt;font-weight:700;line-height:1">第 ${pageNo} 頁，共 2 頁</div>
+    <h1>交通部公路局交通、安衛、環保稽（複）核表</h1>
+  </div>
+  <div class="hd1" style="width:285mm;margin:0 auto 1mm auto">
+    <div><b>填報單位：${esc(p.unit)}</b></div>
+    <div class="r">稽(複)核時間：${d.y}年 ${d.m}月 ${d.d}日 ${t[0] ? +t[0] : ''}時 ${t[1] ? +t[1] : ''}分<br>稽(複)核次數：第 ${c.n} 次累計 ${c.cumN} 次</div>
+  </div>
+  <table class="hdt" style="width:285mm;margin:0 auto"><colgroup><col style="width:21mm"><col style="width:190mm"><col style="width:28mm"><col style="width:46mm"></colgroup>
   <tr><td class="b">工程名稱：</td><td><b>${esc(p.name)}</b></td><td class="b">監造單位</td><td>${esc(p.sup)}</td></tr>
   <tr><td class="b">工程編號：</td><td style="padding:0 2mm">${infoRowTable}</td><td class="b">承包廠商名稱</td><td><b>${esc(p.con)}</b></td></tr></table>`;
 
-  // 第 1 頁與第 2 頁各具備精準的高度，保證不多不少剛好 2 頁，字體清晰且佈滿 A3
-  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page">${hd(1)}<table>${COLS}${thead1}${tbody1}</table></div>`;
-  const page2 = `<div class="sheet" style="zoom:0.915">${hd(2)}<table>${COLS}${thead2}${tbody2}</table>${ft}${sg}</div>`;
+  // 兩頁使用完全一致的寬度 (285mm) 與等比比例 (z)，保證第 1 頁與第 2 頁表格寬度 100% 相同
+  const z = Math.max(0.82, 0.915 - 0.003 * (a.xs || []).length);
+  const page1 = `<div class="sheet" style="page-break-after:always;break-after:page"><div class="in" style="width:285mm;zoom:${z};margin:0 auto">${hd(1)}<table>${COLS}${thead1}${tbody1}</table></div></div>`;
+  const page2 = `<div class="sheet"><div class="in" style="width:285mm;zoom:${z};margin:0 auto">${hd(2)}<table>${COLS}${thead2}${tbody2}</table>${ft}${sg}</div></div>`;
 
   return page1 + page2;
 }
